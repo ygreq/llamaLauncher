@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="LlamaLaunch — A premium local llama-server controller for managing and running local LLM models with llama.cpp">
+  <title>LlamaLaunch — Local Model Controller</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <script type="module" src="/src/main.js"></script>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-brand">
+      <span class="header-logo">🚀</span>
+      <h1 class="header-title">LlamaLaunch</h1>
+    </div>
+    <div class="header-center">
+      <div class="settings-search">
+        <span class="settings-search-icon">🔍</span>
+        <input type="text" id="settingsSearch" class="settings-search-input" placeholder="Search settings... e.g. ngl" autocomplete="off" spellcheck="false">
+        <button id="settingsSearchClear" class="settings-search-clear" title="Clear search" style="display:none;">✕</button>
+        <div id="settingsSearchResults" class="settings-search-results"></div>
+      </div>
+    </div>
+    <div class="header-status">
+      <span id="statusDot" class="status-dot status-stopped"></span>
+      <span id="statusText" class="status-text">Stopped</span>
+    </div>
+  </header>
+
+  <!-- Mobile sidebar toggle -->
+  <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar">☰</button>
+
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar">
+      <!-- Model Section -->
+      <section class="sidebar-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <label class="section-label" style="margin-bottom: 0;">MODEL</label>
+          <div class="model-sort-controls">
+            <select id="modelSortBy" class="select-micro" title="Sort models by">
+              <option value="name_asc">🔤 Name (A-Z)</option>
+              <option value="name_desc">🔤 Name (Z-A)</option>
+              <option value="size_desc">📉 Size (Large-Small)</option>
+              <option value="size_asc">📈 Size (Small-Large)</option>
+              <option value="location">📁 Location / Folder</option>
+            </select>
+            <button id="btnPrevModel" class="btn-micro" title="Previous model (◀)">◀</button>
+            <button id="btnNextModel" class="btn-micro" title="Next model (▶)">▶</button>
+          </div>
+        </div>
+        <div class="model-search-wrapper">
+          <input type="text" id="modelSearchInput" class="input-field model-search-input" placeholder="🔍 Search models (name, size, folder)..." autocomplete="off" spellcheck="false">
+          <button id="btnClearModelSearch" class="btn-clear-search hidden" title="Clear search">✕</button>
+        </div>
+        <div id="modelSelectWrapper">
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <select id="modelSelect" class="input-field" style="flex: 1;">
+              <option value="">— Select a model —</option>
+            </select>
+            <button id="btnBrowseModelFile" class="btn-icon" title="Browse for GGUF model file">📁</button>
+            <button id="btnRefreshModels" class="btn-icon" title="Rescan model folders">🔄</button>
+          </div>
+        </div>
+        <div id="modelPathWrapper" class="hidden">
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <input type="text" id="modelPath" class="input-field" placeholder="/path/to/model.gguf" style="flex: 1;">
+            <button id="btnBrowseModelFileManual" class="btn-icon" title="Browse for GGUF model file">📁</button>
+          </div>
+        </div>
+        <div id="modelDetailsBar" class="model-details-bar hidden">
+          <div class="model-detail-item" title="Model file size">
+            <span class="detail-icon">💾</span>
+            <span id="modelDetailSize" class="detail-val"></span>
+          </div>
+          <div class="model-detail-item model-detail-clickable" id="modelDetailLocationWrapper" title="Click to open folder in File Explorer">
+            <span class="detail-icon">📁</span>
+            <span id="modelDetailLocation" class="detail-val"></span>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+          <a href="#" id="toggleModelInput" class="toggle-link">Enter path manually</a>
+          <a href="#" id="btnBrowseModelDirLink" class="toggle-link" style="color: var(--accent);">📁 Manage / Add Folders</a>
+        </div>
+
+        <!-- Vision / Multimodal Projector (mmproj) -->
+        <div class="sidebar-mmproj-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <label class="section-label" style="margin-bottom: 0;">VISION PROJECTOR</label>
+              <span id="sidebarMmprojBadge" class="badge-mmproj hidden" title="Vision projector attached and active">👁️ Active</span>
+            </div>
+            <a href="#" id="toggleMmprojInput" class="toggle-link" style="font-size: 0.72rem; margin-top: 0;">Manual path</a>
+          </div>
+          <div id="sidebarMmprojSelectWrapper">
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <select id="sidebarMmprojSelect" class="input-field" style="flex: 1;">
+                <option value="">— None (Text Only) —</option>
+              </select>
+              <button id="btnBrowseMmproj" class="btn-icon" title="Browse for mmproj GGUF file">📁</button>
+              <button id="btnClearMmproj" class="btn-icon" title="Remove mmproj" style="display: none;">✕</button>
+            </div>
+          </div>
+          <div id="sidebarMmprojPathWrapper" class="hidden">
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <input type="text" id="sidebarMmprojPath" class="input-field" placeholder="/path/to/mmproj.gguf" style="flex: 1;">
+              <button id="btnBrowseMmprojManual" class="btn-icon" title="Browse for mmproj GGUF file">📁</button>
+              <button id="btnClearMmprojManual" class="btn-icon" title="Remove mmproj" style="display: none;">✕</button>
+            </div>
+          </div>
+          <div id="sidebarMmprojDetailsBar" class="model-details-bar hidden">
+            <div class="model-detail-item" title="Vision Projector file size">
+              <span class="detail-icon">💾</span>
+              <span id="sidebarMmprojDetailSize" class="detail-val"></span>
+            </div>
+            <div class="model-detail-item model-detail-clickable" id="sidebarMmprojDetailLocationWrapper" title="Click to open folder in File Explorer">
+              <span class="detail-icon">📁</span>
+              <span id="sidebarMmprojDetailLocation" class="detail-val"></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Profile Section -->
+      <section class="sidebar-section">
+        <label class="section-label">PROFILE</label>
+        <select id="profileSelect" class="input-field">
+          <option value="">— Select profile —</option>
+        </select>
+        <div class="profile-actions">
+          <button id="btnSaveProfile" class="btn-icon" title="Save profile">💾</button>
+          <button id="btnSaveAsProfile" class="btn-icon" title="Save as new profile">＋</button>
+          <button id="btnDeleteProfile" class="btn-icon btn-icon-danger" title="Delete profile">🗑</button>
+        </div>
+      </section>
+
+      <!-- Hardware Setup Section -->
+      <section class="sidebar-section">
+        <label class="section-label">MY HARDWARE</label>
+        <div class="hw-inputs">
+          <div class="hw-input-group">
+            <label for="hwVram" title="GPU Memory (VRAM) in GB (RTX 4070 has 12GB)">GPU VRAM</label>
+            <div class="input-unit-wrapper">
+              <input type="number" id="hwVram" class="input-field hw-input" value="12" min="1" max="128">
+              <span class="unit">GB</span>
+            </div>
+          </div>
+          <div class="hw-input-group">
+            <label for="hwRam" title="System Memory (RAM) in GB">System RAM</label>
+            <div class="input-unit-wrapper">
+              <input type="number" id="hwRam" class="input-field hw-input" value="64" min="2" max="1024">
+              <span class="unit">GB</span>
+            </div>
+          </div>
+        </div>
+        <div id="hwRecommendationWrapper" class="hw-recommendation-wrapper hidden">
+          <div id="hwRecommendationText" class="hw-recommendation-text"></div>
+          <button id="btnApplyOptimization" class="btn btn-secondary" style="margin-top: 8px; font-size: 0.75rem; padding: 6px 10px; width: 100%;">✨ Optimize Settings</button>
+        </div>
+        <div id="hwRecommendationPlaceholder" class="hw-recommendation-placeholder">
+          Select a model to see suggestions...
+        </div>
+      </section>
+
+      <!-- Scan Directories Section -->
+      <section class="sidebar-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <label class="section-label" style="margin-bottom: 0;">SCAN DIRECTORIES</label>
+          <button id="btnOpenBulkScanDirs" class="btn-text-link" title="Paste multiple folder paths">📋 Bulk Add</button>
+        </div>
+        <div id="scanDirsList" class="scan-dirs-list"></div>
+        <div class="scan-dirs-add">
+          <input type="text" id="scanDirInput" class="input-field" placeholder="Add path(s), separated by commas or semicolons...">
+          <button id="btnBrowseScanDir" class="btn-icon" title="Browse and add folder">📁</button>
+          <button id="btnAddScanDir" class="btn-icon" title="Add directory">＋</button>
+        </div>
+      </section>
+
+       <!-- Quick Actions -->
+       <section class="sidebar-section sidebar-actions">
+         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding: 0 4px;">
+           <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500; user-select: none;">Autostart on Launch</span>
+           <div class="toggle-switch">
+             <input type="checkbox" id="autoStartServer" class="toggle-input">
+             <label for="autoStartServer" class="toggle-label" title="Automatically start the server with the last selected model on app launch"></label>
+           </div>
+         </div>
+         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding: 0 4px;">
+           <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500; user-select: none;">Start with Windows</span>
+           <div class="toggle-switch">
+             <input type="checkbox" id="startWithWindows" class="toggle-input">
+             <label for="startWithWindows" class="toggle-label" title="Launch LlamaLaunch automatically when Windows starts"></label>
+           </div>
+         </div>
+         <button id="btnStart" class="btn btn-start"><span class="btn-icon-text">▶</span> Start Server</button>
+         <button id="btnStop" class="btn btn-stop" disabled><span class="btn-icon-text">■</span> Stop Server</button>
+         <button id="btnOpenUI" class="btn btn-secondary" disabled><span class="btn-icon-text">↗</span> Open WebUI</button>
+       </section>
+    </aside>
+
+    <!-- Main Area -->
+    <main class="main-area">
+      <!-- Tab Bar -->
+      <nav class="tab-bar" role="tablist">
+        <button id="tab-chat" class="tab active" role="tab" aria-selected="true" aria-controls="panel-chat">Chat</button>
+        <button id="tab-server" class="tab" role="tab" aria-selected="false" aria-controls="panel-server">Server</button>
+        <button id="tab-model" class="tab" role="tab" aria-selected="false" aria-controls="panel-model">Model &amp; Context</button>
+        <button id="tab-gpu" class="tab" role="tab" aria-selected="false" aria-controls="panel-gpu">GPU &amp; Memory</button>
+        <button id="tab-sampling" class="tab" role="tab" aria-selected="false" aria-controls="panel-sampling">Sampling</button>
+        <button id="tab-advanced" class="tab" role="tab" aria-selected="false" aria-controls="panel-advanced">Advanced</button>
+        <button id="tab-linkprocessor" class="tab" role="tab" aria-selected="false" aria-controls="panel-linkprocessor">Link Processor</button>
+      </nav>
+
+      <!-- Tab Panels -->
+      <div class="tab-panels">
+         <!-- Server Tab -->
+         <div id="panel-server" class="tab-panel" role="tabpanel" aria-labelledby="tab-server">
+           <div class="form-grid">
+             <div class="form-group form-group-wide">
+               <label for="llamaServerPath" title="Path to llama-server.exe">llama-server Path</label>
+               <div style="display: flex; gap: 8px;">
+                 <input type="text" id="llamaServerPath" class="input-field" placeholder="e.g. C:\ai\llama.cpp\build\bin\Release\llama-server.exe" style="flex: 1;">
+                 <button id="btnBrowseLlamaServer" class="btn-icon" title="Browse for llama-server.exe">📁</button>
+               </div>
+               <span class="field-desc">Path to the llama-server.exe executable. Leave empty to use the default.</span>
+             </div>
+             <div class="form-group">
+              <label for="host" title="--host">Host</label>
+              <input type="text" id="host" class="input-field" value="127.0.0.1">
+              <span class="field-desc">The network address. Use 127.0.0.1 for local-only (safe); 0.0.0.0 lets other devices connect.</span>
+            </div>
+            <div class="form-group">
+              <label for="port" title="--port">Port</label>
+              <input type="number" id="port" class="input-field" value="8085">
+              <span class="field-desc">The network "door" number. Usually 8085 or 8001. Must be unique for this server.</span>
+            </div>
+            <div class="form-group">
+              <label for="alias" title="--alias">Alias</label>
+              <input type="text" id="alias" class="input-field" value="Local LLM" placeholder="Generic name shown in Model Information">
+              <span class="field-desc">A friendly nickname for the model server. Use a generic name (e.g. "Local LLM") so it stays correct when you switch models.</span>
+            </div>
+            <div class="form-group">
+              <label for="parallel" title="-np">Parallel Slots</label>
+              <input type="number" id="parallel" class="input-field" value="-1">
+              <span class="field-desc">How many chat requests the server can handle at once. Set to -1 to auto-configure.</span>
+            </div>
+            <div class="form-group">
+              <label for="apiKey" title="--api-key">API Key</label>
+              <input type="password" id="apiKey" class="input-field" placeholder="Optional API key">
+              <span class="field-desc">An optional password required to access your model server for security.</span>
+            </div>
+            <div class="form-group">
+              <label for="timeout" title="--timeout">Idle Timeout (s)</label>
+              <input type="number" id="timeout" class="input-field" value="0">
+              <span class="field-desc">Auto-shutdown the server after this many seconds of inactivity. Set to 0 to disable (server stays running until manually stopped).</span>
+            </div>
+            <div class="form-group form-group-toggle">
+              <div class="toggle-label-group">
+                <label for="metrics" title="--metrics">Metrics</label>
+                <span class="field-desc">Enables a stats page showing generation speed and performance info.</span>
+              </div>
+              <div class="toggle-switch">
+                <input type="checkbox" id="metrics" class="toggle-input">
+                <label for="metrics" class="toggle-label"></label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Model & Context Tab -->
+        <div id="panel-model" class="tab-panel" role="tabpanel" aria-labelledby="tab-model">
+          <div class="form-grid">
+            <div class="form-group form-group-wide">
+              <label for="contextSize" title="-c">Context Size</label>
+              <div class="input-with-presets">
+                <input type="number" id="contextSize" class="input-field" value="0" min="0">
+                <div class="preset-buttons">
+                  <button class="btn-preset" data-target="contextSize" data-value="4096">4K</button>
+                  <button class="btn-preset" data-target="contextSize" data-value="8192">8K</button>
+                  <button class="btn-preset" data-target="contextSize" data-value="16384">16K</button>
+                  <button class="btn-preset" data-target="contextSize" data-value="32768">32K</button>
+                  <button class="btn-preset" data-target="contextSize" data-value="65536">64K</button>
+                  <button class="btn-preset" data-target="contextSize" data-value="131072">128K</button>
+                </div>
+              </div>
+              <span class="field-desc">The maximum memory (your prompt + the model's response) the model can hold at once. Set to 0 to use the model's default limit.</span>
+            </div>
+            <div class="form-group">
+              <label for="nPredict" title="-n">Max Predict</label>
+              <input type="number" id="nPredict" class="input-field" value="-1">
+              <span class="field-desc">The maximum number of tokens (words/parts of words) the model can write in one go. Use -1 for unlimited.</span>
+            </div>
+            <div class="form-group form-group-toggle">
+              <div class="toggle-label-group">
+                <label for="noContextShift" title="--no-context-shift">No Context Shift</label>
+                <span class="field-desc">If on, generation stops when the memory limit is reached. If off, it "scrolls" and forgets old messages to keep going.</span>
+              </div>
+              <div class="toggle-switch">
+                <input type="checkbox" id="noContextShift" class="toggle-input">
+                <label for="noContextShift" class="toggle-label"></label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="chatTemplate" title="--chat-template">Chat Template</label>
+              <input type="text" id="chatTemplate" class="input-field" placeholder="e.g. chatml, llama3">
+              <span class="field-desc">The format used to structure conversations (how it knows user vs. assistant). E.g. `llama3` or `chatml`.</span>
+            </div>
+            <div class="form-group">
+              <label for="chatTemplateKwargs" title="--chat-template-kwargs">Chat Template Kwargs</label>
+              <input type="text" id="chatTemplateKwargs" class="input-field" placeholder='{"key": "value"}'>
+              <span class="field-desc">Advanced formatting options for chat structures, written in JSON format.</span>
+            </div>
+            <div class="form-group form-group-toggle">
+              <div class="toggle-label-group">
+                <label for="jinja" title="--jinja">Jinja Template</label>
+                <span class="field-desc">Uses the model's built-in jinja2 chat template to format conversations. Don't combine with a manual Chat Template.</span>
+              </div>
+              <div class="toggle-switch">
+                <input type="checkbox" id="jinja" class="toggle-input">
+                <label for="jinja" class="toggle-label"></label>
+              </div>
+            </div>
+            <div class="form-group form-group-wide">
+              <label for="mmproj" title="--mmproj">Multimodal Projector (Vision)</label>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <select id="mmproj" class="input-field" style="flex: 1;">
+                  <option value="">— None —</option>
+                </select>
+                <button id="btnBrowseMmprojTab" class="btn-icon" title="Browse for mmproj GGUF file">📁</button>
+                <button id="btnClearMmprojTab" class="btn-icon" title="Clear mmproj" style="display: none;">✕</button>
+              </div>
+              <span class="field-desc">A vision projector helper file (e.g. <code>mmproj-*.gguf</code>) required for vision-language models to process images. Automatically attaches <code>--mmproj</code> to enable image understanding.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- GPU & Memory Tab -->
+        <div id="panel-gpu" class="tab-panel" role="tabpanel" aria-labelledby="tab-gpu">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="gpuLayers" title="-ngl">GPU Layers</label>
+              <input type="text" id="gpuLayers" class="input-field" value="auto" placeholder="auto, all, or number">
+              <span class="field-desc">How much of the model to run on your graphics card (GPU). Use auto/all for max speed; lower it if you run out of VRAM.</span>
+            </div>
+            <div class="form-group">
+              <label for="flashAttn" title="-fa">Flash Attention</label>
+              <select id="flashAttn" class="input-field">
+                <option value="auto">auto</option>
+                <option value="on">on</option>
+                <option value="off">off</option>
+              </select>
+              <span class="field-desc">An optimization that speeds up processing and uses less graphics memory. Keep on `auto` or `on` for modern GPUs.</span>
+            </div>
+            <div class="form-group">
+              <label for="fit" title="--fit">Fit to Device</label>
+              <select id="fit" class="input-field">
+                <option value="on">on</option>
+                <option value="off">off</option>
+              </select>
+              <span class="field-desc">Dynamically shrinks model layers to make sure the model fits into your graphics card memory without crashing.</span>
+            </div>
+            <div class="form-group">
+              <label for="fitTarget" title="--fit-target">Fit Target (MiB)</label>
+              <input type="number" id="fitTarget" class="input-field" value="1024">
+              <span class="field-desc">The amount of graphics card memory (VRAM) in megabytes to keep empty as a safety buffer.</span>
+            </div>
+            <div class="form-group">
+              <label for="splitMode" title="--split-mode">Split Mode</label>
+              <select id="splitMode" class="input-field">
+                <option value="none">none</option>
+                <option value="layer" selected>layer</option>
+                <option value="row">row</option>
+                <option value="tensor">tensor</option>
+              </select>
+              <span class="field-desc">How to divide the model workload if you are running multiple graphics cards (GPUs).</span>
+            </div>
+            <div class="form-group">
+              <label for="tensorSplit" title="--tensor-split">Tensor Split</label>
+              <input type="text" id="tensorSplit" class="input-field" placeholder="e.g. 3,2">
+              <span class="field-desc">Specific workload percentages when splitting the model across multiple graphics cards.</span>
+            </div>
+            <div class="form-group">
+              <label for="mainGpu" title="--main-gpu">Main GPU</label>
+              <input type="number" id="mainGpu" class="input-field" value="0" min="0">
+              <span class="field-desc">The primary graphics card index (usually 0) used to manage memory and coordination.</span>
+            </div>
+            <div class="form-group">
+              <label for="cacheTypeK" title="-ctk">KV Cache Type K</label>
+              <select id="cacheTypeK" class="input-field">
+                <option value="f32">f32</option>
+                <option value="f16" selected>f16</option>
+                <option value="bf16">bf16</option>
+                <option value="q8_0">q8_0</option>
+                <option value="q4_0">q4_0</option>
+                <option value="q4_1">q4_1</option>
+                <option value="iq4_nl">iq4_nl</option>
+                <option value="q5_0">q5_0</option>
+                <option value="q5_1">q5_1</option>
+              </select>
+              <span class="field-desc">Memory format for keys. Compressed formats (e.g. q8_0, q4_0) save graphics memory with a tiny intelligence cost.</span>
+            </div>
+            <div class="form-group">
+              <label for="cacheTypeV" title="-ctv">KV Cache Type V</label>
+              <select id="cacheTypeV" class="input-field">
+                <option value="f32">f32</option>
+                <option value="f16" selected>f16</option>
+                <option value="bf16">bf16</option>
+                <option value="q8_0">q8_0</option>
+                <option value="q4_0">q4_0</option>
+                <option value="q4_1">q4_1</option>
+                <option value="iq4_nl">iq4_nl</option>
+                <option value="q5_0">q5_0</option>
+                <option value="q5_1">q5_1</option>
+              </select>
+              <span class="field-desc">Memory format for values. Compressed formats (e.g. q8_0, q4_0) save graphics memory with a tiny intelligence cost.</span>
+            </div>
+            <div class="form-group form-group-toggle">
+              <div class="toggle-label-group">
+                <label for="cpuMoe" title="--cpu-moe">CPU MoE</label>
+                <span class="field-desc">Runs Mixture-of-Experts calculations on the CPU instead of the GPU to save graphics memory.</span>
+              </div>
+              <div class="toggle-switch">
+                <input type="checkbox" id="cpuMoe" class="toggle-input">
+                <label for="cpuMoe" class="toggle-label"></label>
+              </div>
+            </div>
+            <div class="form-group form-group-toggle">
+              <div class="toggle-label-group">
+                <label for="mlock" title="--mlock">mlock</label>
+                <span class="field-desc">Locks model in computer RAM, preventing Windows from moving it to the hard drive which causes slowdowns.</span>
+              </div>
+              <div class="toggle-switch">
+                <input type="checkbox" id="mlock" class="toggle-input">
+                <label for="mlock" class="toggle-label"></label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="threads" title="-t">Threads</label>
+              <input type="number" id="threads" class="input-field" value="-1">
+              <span class="field-desc">The number of CPU cores to use. Set to -1 to let the system choose the best number automatically.</span>
+            </div>
+            <div class="form-group">
+              <label for="batchSize" title="-b">Batch Size</label>
+              <input type="number" id="batchSize" class="input-field" value="2048">
+              <span class="field-desc">How many words the model processes at once during prompt evaluation. Higher values speed up prompts but use more memory.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sampling Tab -->
+        <div id="panel-sampling" class="tab-panel" role="tabpanel" aria-labelledby="tab-sampling">
+          <div class="form-grid">
+            <div class="form-group form-group-wide slider-group">
+              <label for="temp" title="--temp">Temperature</label>
+              <div class="slider-row">
+                <input type="range" id="tempRange" class="slider" min="0" max="2" step="0.01" value="0.80">
+                <input type="number" id="temp" class="input-field input-narrow" min="0" max="2" step="0.01" value="0.80">
+              </div>
+              <span class="field-desc">Controls creativity. 0.0 is completely robotic (always gives the same answer); 0.7 to 0.8 is the sweet spot for normal conversation; 1.0+ is creative but can get chaotic.</span>
+            </div>
+            <div class="form-group form-group-wide slider-group">
+              <label for="topK" title="--top-k">Top-K</label>
+              <div class="slider-row">
+                <input type="range" id="topKRange" class="slider" min="0" max="100" step="1" value="40">
+                <input type="number" id="topK" class="input-field input-narrow" min="0" max="100" step="1" value="40">
+              </div>
+              <span class="field-desc">Limits the pool of candidate words. A low value (e.g. 10) forces the model to use only the most obvious words; a higher value (e.g. 50) allows a richer vocabulary but increases the chance of odd word choices.</span>
+            </div>
+            <div class="form-group form-group-wide slider-group">
+              <label for="topP" title="--top-p">Top-P</label>
+              <div class="slider-row">
+                <input type="range" id="topPRange" class="slider" min="0" max="1" step="0.01" value="0.95">
+                <input type="number" id="topP" class="input-field input-narrow" min="0" max="1" step="0.01" value="0.95">
+              </div>
+              <span class="field-desc">Filters out unlikely words. The model only considers a pool of top choices that together make up a cumulative percentage (e.g. 95%), discarding rare and out-of-context words.</span>
+            </div>
+            <div class="form-group form-group-wide slider-group">
+              <label for="minP" title="--min-p">Min-P</label>
+              <div class="slider-row">
+                <input type="range" id="minPRange" class="slider" min="0" max="1" step="0.01" value="0.05">
+                <input type="number" id="minP" class="input-field input-narrow" min="0" max="1" step="0.01" value="0.05">
+              </div>
+              <span class="field-desc">Drops words that are too unlikely compared to the top choice. If set to 0.05, any word that is less than 5% as likely as the best word is ignored. This is widely considered the best filter for keeping responses smart and fluent.</span>
+            </div>
+            <div class="form-group form-group-wide slider-group">
+              <label for="repeatPenalty" title="--repeat-penalty">Repeat Penalty</label>
+              <div class="slider-row">
+                <input type="range" id="repeatPenaltyRange" class="slider" min="0" max="2" step="0.01" value="1.00">
+                <input type="number" id="repeatPenalty" class="input-field input-narrow" min="0" max="2" step="0.01" value="1.00">
+              </div>
+              <span class="field-desc">Stops the model from repeating its own phrases. If you notice the model getting stuck in loops repeating the same sentences, increase this number.</span>
+            </div>
+            <div class="form-group form-group-wide slider-group">
+              <label for="presencePenalty" title="--presence-penalty">Presence Penalty</label>
+              <div class="slider-row">
+                <input type="range" id="presencePenaltyRange" class="slider" min="0" max="2" step="0.01" value="0.00">
+                <input type="number" id="presencePenalty" class="input-field input-narrow" min="0" max="2" step="0.01" value="0.00">
+              </div>
+              <span class="field-desc">Encourages the model to talk about new topics. Higher values make the model active and more likely to change the subject rather than staying on one point.</span>
+            </div>
+            <div class="form-group form-group-wide slider-group">
+              <label for="frequencyPenalty" title="--frequency-penalty">Frequency Penalty</label>
+              <div class="slider-row">
+                <input type="range" id="frequencyPenaltyRange" class="slider" min="0" max="2" step="0.01" value="0.00">
+                <input type="number" id="frequencyPenalty" class="input-field input-narrow" min="0" max="2" step="0.01" value="0.00">
+              </div>
+              <span class="field-desc">Discourages repeating individual words too often, encouraging it to write using a varied vocabulary.</span>
+            </div>
+            <div class="form-group">
+              <label for="seed" title="--seed">Seed</label>
+              <input type="number" id="seed" class="input-field" value="-1">
+              <span class="field-desc">A seed number for reproducibility. Use -1 for a random response every time.</span>
+            </div>
+            <div class="form-group form-group-wide slider-group">
+              <label for="dryMultiplier" title="--dry-multiplier">DRY Multiplier</label>
+              <div class="slider-row">
+                <input type="range" id="dryMultiplierRange" class="slider" min="0" max="3" step="0.01" value="0.00">
+                <input type="number" id="dryMultiplier" class="input-field input-narrow" min="0" max="3" step="0.01" value="0.00">
+              </div>
+              <span class="field-desc">Advanced repetition penalty. Helps prevent repetitive formatting in long sessions.</span>
+            </div>
+            <div class="form-group">
+              <label for="mirostat" title="--mirostat">Mirostat</label>
+              <select id="mirostat" class="input-field">
+                <option value="0" selected>0 (disabled)</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+              </select>
+              <span class="field-desc">Adjusts settings dynamically behind the scenes for natural language flow.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Advanced Tab -->
+        <div id="panel-advanced" class="tab-panel" role="tabpanel" aria-labelledby="tab-advanced">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="lora" title="--lora">LoRA Adapter</label>
+              <input type="text" id="lora" class="input-field" placeholder="/path/to/lora.gguf">
+              <span class="field-desc">Apply fine-tuning adapters (LoRA) dynamically.</span>
+            </div>
+            <div class="form-group">
+              <label for="ropeScaling" title="--rope-scaling">RoPE Scaling</label>
+              <select id="ropeScaling" class="input-field">
+                <option value="">— None —</option>
+                <option value="none">none</option>
+                <option value="linear">linear</option>
+                <option value="yarn">yarn</option>
+              </select>
+              <span class="field-desc">RoPE scaling technique for extending model context size.</span>
+            </div>
+            <div class="form-group">
+              <label for="ropeScale" title="--rope-scale">RoPE Scale</label>
+              <input type="number" id="ropeScale" class="input-field" placeholder="e.g. 2.0" step="0.1">
+              <span class="field-desc">Workload memory stretching factor.</span>
+            </div>
+            <div class="form-group">
+              <label for="rpcServers" title="--rpc">RPC Servers</label>
+              <input type="text" id="rpcServers" class="input-field" placeholder="host:port,host:port">
+              <span class="field-desc">RPC host locations to offload model calculations.</span>
+            </div>
+            <div class="form-group form-group-toggle">
+              <div class="toggle-label-group">
+                <label for="verbose" title="--verbose">Verbose</label>
+                <span class="field-desc">Log highly verbose debug info.</span>
+              </div>
+              <div class="toggle-switch">
+                <input type="checkbox" id="verbose" class="toggle-input">
+                <label for="verbose" class="toggle-label"></label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="logFile" title="--log-file">Log File</label>
+              <input type="text" id="logFile" class="input-field" placeholder="/path/to/server.log">
+              <span class="field-desc">File path on disk where server console logs will be written.</span>
+            </div>
+            <div class="form-group form-group-wide">
+              <label for="customArgs">Custom Args</label>
+              <textarea id="customArgs" class="input-field input-textarea" placeholder="Additional arguments appended to command, one per line" rows="4"></textarea>
+              <span class="field-desc">Type raw llama-server command-line flags here (one per line).</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Tab -->
+        <div id="panel-chat" class="tab-panel active" style="height: calc(100vh - 120px);" role="tabpanel" aria-labelledby="tab-chat">
+          <div id="chatIframeContainer" style="width: 100%; height: 100%; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden;">
+            <div class="chat-welcome">
+              <span class="welcome-icon">💬</span>
+              <h3>Llama Server UI</h3>
+              <p id="chatIframeStatus">Start the server using the sidebar button to mirror the interface here.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Link Processor Tab -->
+        <div id="panel-linkprocessor" class="tab-panel" role="tabpanel" aria-labelledby="tab-linkprocessor">
+          <div class="link-processor-dashboard">
+            <!-- Header/Status Bar -->
+            <div class="lp-status-bar">
+              <div class="status-badge" id="lp-watcher-badge">
+                <span class="dot"></span>
+                <span class="label">Watcher: Loading...</span>
+              </div>
+              <div class="status-badge" id="lp-llm-badge">
+                <span class="dot"></span>
+                <span class="label">AI Model: Loading...</span>
+              </div>
+            </div>
+
+            <div class="lp-grid">
+              <!-- Left side: Actions & Queue, Config -->
+              <div class="lp-col">
+                <div class="lp-card">
+                  <div class="lp-card-header">
+                    <h3>Pending Link Queue</h3>
+                    <span class="lp-badge" id="lp-queue-count">0 links</span>
+                  </div>
+                  <div class="lp-actions">
+                    <button class="btn btn-secondary" id="lp-btn-process-1" title="Process the first link in the queue">
+                      ⚡ Process 1 Link
+                    </button>
+                    <button class="btn btn-secondary" id="lp-btn-process-10" title="Process up to 10 links in a batch">
+                      📦 Process Batch (10)
+                    </button>
+                    <button class="btn btn-start" id="lp-btn-process-all" title="Process all pending links in the queue" style="border: none;">
+                      🔥 Process All Links
+                    </button>
+                  </div>
+                  <div class="lp-list-container">
+                    <ul class="lp-list" id="lp-queue-list">
+                      <li class="lp-empty">No links waiting in Links.md. Add some URLs to start!</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="lp-card">
+                  <div class="lp-card-header">
+                    <h3>Pipeline Configuration</h3>
+                  </div>
+                  <form class="lp-form" id="lp-config-form">
+                    <div class="form-group" style="margin-bottom: 12px;">
+                      <label for="lp-input-file">Obsidian Links File Path</label>
+                      <div style="display: flex; gap: 8px;">
+                        <input type="text" id="lp-input-file" class="input-field" required placeholder="e.g. C:\Vault\Links.md" style="flex: 1;">
+                        <button type="button" id="lp-btn-browse-input-file" class="btn-icon" title="Browse for Links.md file">📁</button>
+                      </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                      <label for="lp-journals-dir">Logseq Journals Directory</label>
+                      <div style="display: flex; gap: 8px;">
+                        <input type="text" id="lp-journals-dir" class="input-field" required placeholder="e.g. C:\Vault\journals" style="flex: 1;">
+                        <button type="button" id="lp-btn-browse-journals-dir" class="btn-icon" title="Browse for journals directory">📁</button>
+                      </div>
+                    </div>
+                    <div style="display: flex; gap: 15px; margin-top: 15px; align-items: flex-end;">
+                      <div class="form-group" style="flex: 1; margin: 0; margin-bottom: 0;">
+                        <label for="lp-debounce-ms">Debounce (ms)</label>
+                        <input type="number" id="lp-debounce-ms" class="input-field" min="100" max="10000" required>
+                      </div>
+                      <button type="submit" class="btn btn-secondary" id="lp-btn-save-settings" style="flex: 1; height: 38px;">
+                        Save Settings
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                <div class="lp-card" id="lp-git-card">
+                  <div class="lp-card-header">
+                    <h3>Git Sync</h3>
+                    <div class="toggle-switch">
+                      <input type="checkbox" id="lp-git-enabled" class="toggle-input">
+                      <label for="lp-git-enabled" class="toggle-label" title="Enable/disable Git auto-sync"></label>
+                    </div>
+                  </div>
+
+                  <div class="lp-git-body">
+                    <div class="form-group" style="margin-bottom: 10px;">
+                      <label for="lp-git-repo-input">Obsidian Vault Folder (.git)</label>
+                      <div style="display: flex; gap: 8px;">
+                        <input type="text" id="lp-git-repo-input" class="input-field" placeholder="e.g. C:\Vault" style="flex: 1;">
+                        <button type="button" id="lp-btn-browse-git-repo" class="btn-icon" title="Browse for Obsidian Vault folder">📁</button>
+                        <button type="button" id="lp-btn-save-git-repo" class="btn-icon" title="Save repository folder">💾</button>
+                      </div>
+                    </div>
+
+                    <div class="lp-git-status" id="lp-git-status">
+                      <div class="lp-git-status-row">
+                        <span class="lp-git-status-label">Status:</span>
+                        <span class="lp-git-status-value" id="lp-git-status-text">Loading...</span>
+                      </div>
+                      <div class="lp-git-status-row">
+                        <span class="lp-git-status-label">Active Repo:</span>
+                        <span class="lp-git-status-value" id="lp-git-repo-path">—</span>
+                      </div>
+                      <div class="lp-git-status-row">
+                        <span class="lp-git-status-label">Branch:</span>
+                        <span class="lp-git-status-value" id="lp-git-branch">—</span>
+                      </div>
+                      <div class="lp-git-status-row">
+                        <span class="lp-git-status-label">Remote:</span>
+                        <span class="lp-git-status-value" id="lp-git-remote">—</span>
+                      </div>
+                      <div class="lp-git-status-row" id="lp-git-changes-row">
+                        <span class="lp-git-status-label">Local changes:</span>
+                        <span class="lp-git-status-value" id="lp-git-changes">—</span>
+                      </div>
+                      <div class="lp-git-status-row" id="lp-git-ahead-row">
+                        <span class="lp-git-status-label">Ahead/Behind:</span>
+                        <span class="lp-git-status-value" id="lp-git-ahead-behind">—</span>
+                      </div>
+                    </div>
+
+                    <div class="lp-git-actions">
+                      <button class="btn btn-secondary" id="lp-btn-git-sync" title="Pull, commit and push now">
+                        🔄 Sync Now
+                      </button>
+                    </div>
+
+                    <div class="lp-git-hint" id="lp-git-hint">
+                      Git sync is disabled. Enable it to automatically pull, commit and push your Obsidian vault.
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right side: Categories, History -->
+              <div class="lp-col">
+                <div class="lp-card">
+                  <div class="lp-card-header">
+                    <h3>Active Category Tags</h3>
+                    <span class="lp-badge" id="lp-categories-count">0 tags</span>
+                  </div>
+                  <div class="lp-categories-container">
+                    <div class="lp-categories-grid" id="lp-categories-grid">
+                      <!-- Rendered dynamically -->
+                    </div>
+                    <div class="lp-category-add">
+                      <input type="text" id="lp-category-new" class="input-field" placeholder="New tag name (e.g. finance)" style="flex: 1;">
+                      <button type="button" id="lp-btn-category-add" class="btn-icon" title="Add tag">＋</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="lp-card">
+                  <div class="lp-card-header">
+                    <h3>Recently Processed</h3>
+                    <span class="lp-badge" id="lp-history-count">0 items</span>
+                  </div>
+                  <div class="lp-list-container">
+                    <ul class="lp-list" id="lp-history-list">
+                      <li class="lp-empty">No processed URLs found in history.</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Command Preview -->
+      <section class="command-preview-section">
+        <div class="section-header">
+          <label class="section-label">COMMAND PREVIEW</label>
+          <button id="btnCopyCommand" class="btn-icon" title="Copy command">📋</button>
+        </div>
+        <pre id="commandPreview" class="command-preview">Select a model to see the command preview...</pre>
+      </section>
+
+      <!-- Console Log -->
+      <section class="console-section">
+        <div class="section-header">
+          <label class="section-label">CONSOLE</label>
+          <div class="console-controls">
+            <button id="btnAutoScroll" class="btn-icon btn-icon-active" title="Auto-scroll">⇩</button>
+            <button id="btnClearConsole" class="btn-icon" title="Clear console">✕</button>
+          </div>
+        </div>
+        <div id="consoleLog" class="console-log"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Bulk Scan Directories Modal -->
+  <div id="bulkScanDirsModal" class="modal-backdrop hidden">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">📁 Bulk Add GGUF Folders</h3>
+        <button id="btnCloseBulkScanDirs" class="btn-icon" title="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-description">
+          Paste your folder paths below (one path per line, or separated by commas or semicolons). Subfolders up to 6 levels deep are automatically scanned for <code>.gguf</code> models.
+        </p>
+        <textarea id="bulkScanDirsInput" class="input-field bulk-dirs-textarea" rows="8" placeholder="E:\AI\GGUF\Coding&#10;E:\AI\GGUF\General&#10;D:\Models\Llama" spellcheck="false"></textarea>
+        <div class="modal-stats">
+          <span id="bulkScanDirsCount">0 paths detected</span>
+          <button id="btnBrowseAddToBulk" class="btn btn-secondary btn-sm" type="button">📁 Browse &amp; Add</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btnClearAllScanDirs" class="btn btn-danger btn-sm" type="button">Clear All Existing</button>
+        <div style="display: flex; gap: 8px;">
+          <button id="btnCancelBulkScanDirs" class="btn btn-secondary" type="button">Cancel</button>
+          <button id="btnAddAllBulkScanDirs" class="btn btn-start" type="button">Add Folders &amp; Rescan</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toastContainer" class="toast-container"></div>
+</body>
+</html>

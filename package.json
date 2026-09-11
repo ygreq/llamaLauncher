@@ -1,0 +1,33 @@
+{
+  "name": "llamalaunch",
+  "version": "1.0.0",
+  "description": "Local LLM server controller for llama.cpp",
+  "main": "server.js",
+  "bin": "server_bundled.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "npm run build --prefix frontend",
+    "dev": "concurrently \"node server.js\" \"npm run dev --prefix frontend\"",
+    "bundle": "npx esbuild server.js --bundle --platform=node --target=node18 --external:node:sqlite --outfile=server_bundled.js && node patch_bundle.js",
+    "package": "npm run build && npm run bundle && pkg server_bundled.js --targets node18-win-x64 --output LlamaLaunch.exe"
+  },
+  "pkg": {
+    "assets": [
+      "frontend/dist/**/*",
+      "categories.json"
+    ]
+  },
+  "dependencies": {
+    "cheerio": "^1.2.0",
+    "chokidar": "^5.0.0",
+    "express": "^4.21.0",
+    "franc": "^6.2.0",
+    "keyword-extractor": "^0.0.28",
+    "open-graph-scraper": "^6.12.0",
+    "tldts": "^7.4.4"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.3",
+    "pkg": "^5.8.1"
+  }
+}

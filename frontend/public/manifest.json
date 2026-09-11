@@ -1,0 +1,18 @@
+{
+  "name": "LlamaLaunch",
+  "short_name": "LlamaLaunch",
+  "description": "Premium local model controller for llama.cpp",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0d0f12",
+  "theme_color": "#5c5fc8",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

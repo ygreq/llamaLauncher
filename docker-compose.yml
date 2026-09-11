@@ -1,0 +1,35 @@
+services:
+  llamalaunch:
+    image: ghcr.io/ygreq/llamalaunch:latest
+    container_name: llamalaunch
+    restart: unless-stopped
+    user: "${PUID}:${PGID}"
+    ports:
+      - "${LLAMALAUNCH_PORT}:${LLAMALAUNCH_PORT}"
+    environment:
+      - PORT=${LLAMALAUNCH_PORT}
+      - NODE_ENV=production
+      - TZ=${TZ}
+      
+      # Paths inside the container
+      - CONFIG_PATH=/config/config.json
+      - HISTORY_FILE=/config/processed_history.json
+      - CATEGORIES_FILE=/config/categories.json
+      - LINK_INPUT_FILE=/obsidian/Links.md
+      - LINK_JOURNALS_DIR=/obsidian/journals
+    volumes:
+      # Map to host directories for persistence.
+      - ${COMPOSE_DIR}/llamaLauncher/config:/config
+      
+      # Mount directory containing your GGUF models
+      - ${LLM_MODELS_DIR:-./models}:/models
+      
+      # Mount your Obsidian vault containing your Links.md and journals
+      - ${OBSIDIAN_DIR:-./obsidian}:/obsidian
+    networks:
+      - ai-network
+
+networks:
+  ai-network:
+    name: ai-network
+    external: true

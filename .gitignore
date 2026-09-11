@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Production builds and executables
+frontend/dist/
+server_bundled.js
+LlamaLaunch_prod.exe
+LlamaLaunch.exe
+
+# Local configuration and data/caches
+.env
+config.json
+enriched_links.json
+processed_history.json
+temp_*.ps1
+
+# Local Obsidian Vault (contains test files and its own git repo)
+obsidian/
+
+# Logs and scratch files
+logs/
+scratch/
+*.log
+
+# Miscellaneous
+__pycache__/
+.DS_Store
+Thumbs.db
+*.lnk

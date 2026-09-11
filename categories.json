@@ -1,0 +1,12 @@
+{
+  "SUC": ["legislation", "directivă", "lege", "laws", "european law", "romanian law", "parlament", "deputați", "senat"],
+  "homelab": ["homelab", "home lab", "proxmox", "unraid", "truenas"],
+  "selfHosted": ["self-hosted", "selfhosted", "docker", "portainer"],
+  "homeAssistant": ["home assistant", "homeassistant", "hass.io", "esphome", "zigbee"],
+  "mdlw": ["electronics", "raspberry pi", "raspberrypi", "esp32", "esp8266", "arduino", "microcontroller"],
+  "glassJob": ["glass", "sticlă", "fereastră", "geam", "feronerie"],
+  "localLLM": ["local llm", "llama.cpp", "ollama", "local ai", "huggingface"],
+  "healthcare": ["healthcare", "health", "medical", "sănătate", "medic", "doctor"],
+  "politics": ["politics", "politică", "elections", "alegeri", "government", "guvern", "politician", "vota", "vote"],
+  "vibeCoding": ["vibe coding", "vibecoding", "coding by vibe", "vibe-coding"]
+}
