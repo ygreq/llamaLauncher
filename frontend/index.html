@@ -215,6 +215,7 @@
         <button id="tab-sampling" class="tab" role="tab" aria-selected="false" aria-controls="panel-sampling">Sampling</button>
         <button id="tab-advanced" class="tab" role="tab" aria-selected="false" aria-controls="panel-advanced">Advanced</button>
         <button id="tab-linkprocessor" class="tab" role="tab" aria-selected="false" aria-controls="panel-linkprocessor">Link Processor</button>
+        <button id="tab-about" class="tab" role="tab" aria-selected="false" aria-controls="panel-about">About</button>
       </nav>
 
       <!-- Tab Panels -->
@@ -758,6 +759,76 @@
                       <li class="lp-empty">No processed URLs found in history.</li>
                     </ul>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- About Tab -->
+        <div id="panel-about" class="tab-panel" role="tabpanel" aria-labelledby="tab-about">
+          <div class="about-container">
+            <div class="about-hero">
+              <div class="about-hero-badge">v1.0.0 • Production Ready</div>
+              <h2 class="about-title">🚀 LlamaLaunch</h2>
+              <p class="about-tagline">High-Performance Local LLM Controller &amp; Knowledge Pipeline for llama.cpp</p>
+              <div class="about-links">
+                <a href="https://github.com/ygreq/llamaLauncher" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">⭐ GitHub Repository</a>
+                <a href="https://github.com/ygreq/llamaLauncher/pkgs/container/llamalaunch" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">🐳 Container Registry</a>
+                <a href="https://github.com/ggerganov/llama.cpp" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">⚡ llama.cpp Backend</a>
+              </div>
+            </div>
+
+            <div class="about-grid">
+              <div class="about-card">
+                <div class="about-card-icon">🎛️</div>
+                <h3>Granular Server Control</h3>
+                <p>Run local <code>llama-server</code> instances with hot-reloading profiles, live streaming console output via SSE, process PID tracking, and graceful shutdowns.</p>
+              </div>
+
+              <div class="about-card">
+                <div class="about-card-icon">📁</div>
+                <h3>Deep GGUF Model Scanner</h3>
+                <p>Recursively scan multiple folders and drives up to 6 levels deep. Bulk import directories with live folder browsing and instant model sorting by size, name, or location.</p>
+              </div>
+
+              <div class="about-card">
+                <div class="about-card-icon">👁️</div>
+                <h3>Vision &amp; Multimodal (mmproj)</h3>
+                <p>Automatic detection and manual attachment of vision projectors for multimodal architectures (Qwen2.5-VL, Llama 3.2 Vision, MiniCPM-V).</p>
+              </div>
+
+              <div class="about-card">
+                <div class="about-card-icon">⚡</div>
+                <h3>Hardware &amp; VRAM Tuning</h3>
+                <p>Real-time VRAM/RAM analysis calculating optimal GPU offloading layers (<code>-ngl</code>), context size limits, and KV-cache quantizations (<code>q8_0</code>, <code>f16</code>).</p>
+              </div>
+
+              <div class="about-card">
+                <div class="about-card-icon">💬</div>
+                <h3>Integrated Streaming Chat</h3>
+                <p>Direct conversational interface embedded in the dashboard with zero cloud latency, custom system prompts, and full privacy.</p>
+              </div>
+
+              <div class="about-card">
+                <div class="about-card-icon">🔗</div>
+                <h3>Logseq &amp; Obsidian Automation</h3>
+                <p>Background pipeline that monitors <code>Links.md</code>, scrapes articles, summarizes content via local LLM, and formats daily journals with automated Git sync.</p>
+              </div>
+            </div>
+
+            <div class="about-footer-card">
+              <div class="about-footer-content">
+                <div>
+                  <h4>Zero Telemetry • 100% Local &amp; Private</h4>
+                  <p>All model execution, scraping, and knowledge processing occurs strictly on your machine or local network.</p>
+                </div>
+                <div class="about-badge-pills">
+                  <span class="about-pill">Node.js 20+</span>
+                  <span class="about-pill">Express</span>
+                  <span class="about-pill">Vite</span>
+                  <span class="about-pill">Docker</span>
+                  <span class="about-pill">llama.cpp</span>
                 </div>
               </div>
             </div>

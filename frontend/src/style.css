@@ -2036,3 +2036,163 @@ textarea.input-field {
   border-color: var(--accent-dim);
 }
 
+/* ---------- About Section ---------- */
+.about-container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 10px 10px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.about-hero {
+  text-align: center;
+  padding: 32px 24px;
+  background: linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-elevated) 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.about-hero-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-glow);
+  border: 1px solid var(--accent-dim);
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.about-title {
+  font-size: 1.9rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+}
+
+.about-tagline {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  max-width: 620px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.about-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.about-links a {
+  text-decoration: none;
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.about-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+}
+
+.about-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-dim);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.about-card-icon {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.about-card h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.about-card p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.about-card code {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  background: var(--bg-elevated);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  color: var(--accent);
+}
+
+.about-footer-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+}
+
+.about-footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.about-footer-content h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--success-light);
+  margin-bottom: 4px;
+}
+
+.about-footer-content p {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.about-badge-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.about-pill {
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+
