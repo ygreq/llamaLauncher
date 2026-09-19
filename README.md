@@ -1,4 +1,4 @@
-# 🚀 LlamaLaunch — Local LLM Server Controller
+# 🚀 LlamaLauncher — Local LLM Server Controller
 
 [![GitHub release](https://img.shields.io/github/v/release/ygreq/llamaLauncher?include_prereleases&style=flat-square&color=0ea5e9)](https://github.com/ygreq/llamaLauncher/releases)
 [![Docker Image](https://img.shields.io/badge/Docker-ghcr.io%2Fygreq%2Fllamalaunch-blue?logo=docker&style=flat-square)](https://github.com/ygreq/llamaLauncher/pkgs/container/llamalaunch)
