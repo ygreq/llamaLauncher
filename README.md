@@ -98,5 +98,17 @@ Access the web interface at `http://<your-server-ip>:3000`.
 
 ---
 
+## ☕ Support
+
+If this project is helpful to you and you'd like to buy me a coffee:
+
+<a href="https://www.buymeacoffee.com/ygreq">
+  <img src="https://img.shields.io/badge/Buy%20Me%20A%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee" />
+</a>
+
+Direct link: [buymeacoffee.com/ygreq](https://www.buymeacoffee.com/ygreq)
+
+---
+
 ## 📄 License
 MIT License. Free and open source for local AI enthusiasts.
